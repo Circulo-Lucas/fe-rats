@@ -66,7 +66,8 @@ Manter `localhost` em **Redirect URLs** permite testar no PC sem tirar a produç
 1. **Project Settings** (ícone engrenagem) → **API**.
 2. Copie:
    - **Project URL** → `VITE_SUPABASE_URL`
-   - **anon public** (Publishable key / anon key) → `VITE_SUPABASE_ANON_KEY`
+   - **anon public** (JWT que começa com `eyJ…`) → `VITE_SUPABASE_ANON_KEY`  
+     Não use a *publishable key* (`sb_publishable_…`) neste projeto — o app usa a chave **anon** clássica.
 
 3. Na pasta do projeto, crie o arquivo `.env` (não commitar no Git):
 
