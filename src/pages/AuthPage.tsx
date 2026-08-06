@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { Brand } from '../components/Brand'
 
 export function AuthPage() {
-  const { user, loading, configured, signIn, signUp } = useAuth()
+  const { user, loading, signIn, signUp } = useAuth()
   const [mode, setMode] = useState<'login' | 'signup'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -54,13 +54,6 @@ export function AuthPage() {
           <Brand size="lg" />
           <p className="brand-tagline">Comunidade, presença e constância na vida da igreja.</p>
         </div>
-
-        {!configured && (
-          <div className="callout callout-warn">
-            Configure <code>VITE_SUPABASE_URL</code> e <code>VITE_SUPABASE_ANON_KEY</code> no arquivo{' '}
-            <code>.env</code> (veja <code>.env.example</code>).
-          </div>
-        )}
 
         <div className="tabs">
           <button
@@ -125,7 +118,7 @@ export function AuthPage() {
           <button
             type="submit"
             className="btn btn-primary btn-block"
-            disabled={pending || !configured}
+            disabled={pending}
           >
             {pending ? 'Aguarde…' : mode === 'login' ? 'Entrar' : 'Criar conta'}
           </button>
