@@ -38,13 +38,21 @@ As políticas de Storage já existem. Pode ignorar se o bucket `check-in-proofs`
 
 ---
 
-## 3. Autenticação (login com e-mail)
+## 3. Autenticação (login com e-mail, **sem** confirmar e-mail)
 
 1. **Authentication** → **Providers** → **Email**.
 2. Deixe **Enable Email provider** ligado.
-3. Para a comunidade usar sem travar em e-mail:
-   - **Authentication** → **Providers** → **Email** → desligue **Confirm email** (cadastro entra direto, quase não gasta limite de envio).
-4. Se ainda precisar de confirmação por e-mail, configure SMTP próprio em **Project Settings → Authentication** (limites maiores que o e-mail padrão do Supabase).
+3. **Desligue** **Confirm email** e salve — cadastro entra direto, sem link no e-mail (recomendado para o FéRats).
+
+O repositório já traz `supabase/config.toml` com `enable_confirmations = false`. Para aplicar no projeto na nuvem (alternativa ao passo 3 manual):
+
+```bash
+npx supabase login
+npx supabase link --project-ref kcbeuvvoyorcddhbajnt
+npx supabase config push
+```
+
+4. Contas antigas sem confirmar: rode **uma vez** `supabase/scripts/confirm-existing-users.sql` no SQL Editor.
 
 ### Limite “email rate limit exceeded”
 

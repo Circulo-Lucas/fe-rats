@@ -1,0 +1,13 @@
+# Config do Auth (aplique no projeto remoto com: supabase link && supabase config push)
+# https://supabase.com/docs/guides/cli/config
+
+project_id = "kcbeuvvoyorcddhbajnt"
+
+[auth]
+site_url = "https://fe-rats.vercel.app"
+additional_redirect_urls = ["https://fe-rats.vercel.app/**", "http://localhost:5173/**"]
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = false
+enable_confirmations = false

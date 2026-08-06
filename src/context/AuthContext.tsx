@@ -23,7 +23,7 @@ type AuthContextValue = {
     email: string,
     password: string,
     displayName: string,
-  ) => Promise<{ error: string | null }>
+  ) => Promise<{ error: string | null; signedIn: boolean }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
 }
@@ -84,15 +84,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = useCallback(
     async (email: string, password: string, displayName: string) => {
-      if (!supabase) return { error: 'Supabase não configurado.' }
+      if (!supabase) return { error: 'Supabase não configurado.', signedIn: false }
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { display_name: displayName } },
       })
-      if (error) return { error: mapAuthError(error.message) }
-      if (data.session) return { error: null }
-      return { error: null }
+      if (error) return { error: mapAuthError(error.message), signedIn: false }
+      return { error: null, signedIn: Boolean(data.session) }
     },
     [],
   )

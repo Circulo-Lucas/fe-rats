@@ -19,7 +19,9 @@ export function mapAuthError(message: string): string {
   }
 
   if (m.includes('email not confirmed')) {
-    return 'Confirme o e-mail pelo link que o Supabase enviou antes de entrar.'
+    return (
+      'Este e-mail ainda não foi confirmado. No Supabase, desligue “Confirm email” ou confirme o usuário em Authentication → Users.'
+    )
   }
 
   if (m.includes('password should be at least')) {

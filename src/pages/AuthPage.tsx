@@ -31,20 +31,22 @@ export function AuthPage() {
     setError(null)
     setInfo(null)
 
-    const result =
-      mode === 'login'
-        ? await signIn(email, password)
-        : await signUp(email, password, displayName)
+    if (mode === 'login') {
+      const result = await signIn(email, password)
+      setPending(false)
+      if (result.error) setError(result.error)
+      return
+    }
 
+    const result = await signUp(email, password, displayName)
     setPending(false)
     if (result.error) {
       setError(result.error)
       return
     }
-    if (mode === 'signup') {
-      setMode('login')
-      setInfo('Conta criada. Confirme o e-mail se o Supabase pedir, depois entre.')
-    }
+    if (result.signedIn) return
+    setMode('login')
+    setInfo('Conta criada. Agora entre com seu e-mail e senha.')
   }
 
   return (
