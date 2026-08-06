@@ -28,6 +28,8 @@ App para a comunidade registrar presença nas atividades da igreja, somar pontos
 4. Copie `.env.example` para `.env` com URL e chave `anon`.
 5. `npm install` e `npm run dev`.
 
+**Produção:** [https://fe-rats.vercel.app](https://fe-rats.vercel.app) — configure Supabase + variáveis na Vercel: `docs/SUPABASE_SETUP.md`.
+
 ## Comprovante em foto
 
 - Cada check-in exige **uma foto** tirada na hora.
