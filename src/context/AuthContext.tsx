@@ -9,6 +9,7 @@ import {
 } from 'react'
 import type { Session, User } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
+import { mapAuthError } from '../lib/authErrors'
 import type { Profile } from '../types/database'
 
 type AuthContextValue = {
@@ -78,18 +79,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) return { error: 'Supabase não configurado.' }
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return { error: error?.message ?? null }
+    return { error: error ? mapAuthError(error.message) : null }
   }, [])
 
   const signUp = useCallback(
     async (email: string, password: string, displayName: string) => {
       if (!supabase) return { error: 'Supabase não configurado.' }
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { display_name: displayName } },
       })
-      return { error: error?.message ?? null }
+      if (error) return { error: mapAuthError(error.message) }
+      if (data.session) return { error: null }
+      return { error: null }
     },
     [],
   )

@@ -42,9 +42,21 @@ As políticas de Storage já existem. Pode ignorar se o bucket `check-in-proofs`
 
 1. **Authentication** → **Providers** → **Email**.
 2. Deixe **Enable Email provider** ligado.
-3. Para testar rápido (sem confirmar e-mail):
-   - **Authentication** → **Providers** → **Email** → desligue **Confirm email**.
-4. Para produção depois, ligue de novo e configure SMTP em **Project Settings → Authentication**.
+3. Para a comunidade usar sem travar em e-mail:
+   - **Authentication** → **Providers** → **Email** → desligue **Confirm email** (cadastro entra direto, quase não gasta limite de envio).
+4. Se ainda precisar de confirmação por e-mail, configure SMTP próprio em **Project Settings → Authentication** (limites maiores que o e-mail padrão do Supabase).
+
+### Limite “email rate limit exceeded”
+
+No plano gratuito o Supabase envia **poucos e-mails por hora** (cadastros repetidos, confirmação, “esqueci senha” contam).
+
+**O que fazer:**
+
+1. Desligue **Confirm email** (passo 3 acima) — principal ajuste para o FéRats.
+2. **Authentication** → **Rate Limits** — revise limites se o painel mostrar essa seção.
+3. Espere ~1 h e tente de novo, ou use **Entrar** se o cadastro já tiver sido criado antes.
+4. Em **Authentication** → **Users**, confira se o usuário já existe e, se quiser, confirme manualmente o e-mail.
+
 
 ### URLs do app (redirects de login e e-mail)
 
@@ -129,6 +141,7 @@ Policies esperadas (3):
 | Erro no upload da foto | Rodou o `002`? Bucket `check-in-proofs` existe? Usuário logado? |
 | “Não encontramos data na foto” | Use foto da câmera no mesmo dia; evite print/WhatsApp sem EXIF |
 | Login não funciona após cadastro | Desligue “Confirm email” ou confirme o e-mail |
+| **email rate limit exceeded** | Desligue “Confirm email”; aguarde 1 h; tente **Entrar** |
 
 ---
 
