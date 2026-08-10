@@ -69,15 +69,33 @@ export function ProfilePage() {
     setMessage(null)
     setNewInviteCode(null)
     const { error, inviteCode } = await createCommunity(newGroupName)
-    setGroupBusy(false)
     if (error) {
+      setGroupBusy(false)
       setMessage(error)
       return
     }
     setNewGroupName('')
     setNewInviteCode(inviteCode ?? null)
     await refreshCommunities()
-    setMessage('Novo grupo criado. Compartilhe o código abaixo.')
+    setGroupBusy(false)
+    const code = inviteCode ?? null
+    if (!code) {
+      setMessage('Grupo criado, mas não foi possível carregar o código. Rode a migration 007 no Supabase e atualize a página.')
+      return
+    }
+    setMessage('Grupo criado. Compartilhe o código abaixo para outras pessoas entrarem.')
+  }
+
+  const displayedInviteCode = newInviteCode ?? community?.invite_code ?? null
+
+  async function copyInviteCode() {
+    if (!displayedInviteCode) return
+    try {
+      await navigator.clipboard.writeText(displayedInviteCode)
+      setMessage('Código copiado.')
+    } catch {
+      setMessage('Não foi possível copiar. Selecione o código manualmente.')
+    }
   }
 
   async function handleJoinByCode(e: React.FormEvent) {
@@ -139,10 +157,17 @@ export function ProfilePage() {
         {community && (
           <>
             <p className="group-panel__name">{community.name}</p>
-            <p className="group-panel__code">
-              Código para convidar: <strong>{community.invite_code}</strong>
-            </p>
           </>
+        )}
+
+        {displayedInviteCode && (
+          <div className="invite-code-box">
+            <p className="invite-code-box__label">Código para convidar</p>
+            <p className="invite-code-box__code">{displayedInviteCode}</p>
+            <button type="button" className="btn btn-secondary btn-block" onClick={() => void copyInviteCode()}>
+              Copiar código
+            </button>
+          </div>
         )}
 
         {!community ? (
@@ -230,9 +255,20 @@ export function ProfilePage() {
           </form>
         )}
 
-        {newInviteCode && (
-          <p className="success">
-            Código do novo grupo: <strong>{newInviteCode}</strong>
+        {message && (
+          <p
+            className={
+              message.includes('atualizado') ||
+              message.includes('criado') ||
+              message.includes('alterado') ||
+              message.includes('entrou') ||
+              message.includes('copiado') ||
+              message.includes('Compartilhe')
+                ? 'success'
+                : 'error'
+            }
+          >
+            {message}
           </p>
         )}
       </section>
@@ -248,11 +284,6 @@ export function ProfilePage() {
             maxLength={40}
           />
         </label>
-        {message && (
-          <p className={message.includes('atualizado') || message.includes('criado') || message.includes('alterado') || message.includes('entrou') ? 'success' : 'error'}>
-            {message}
-          </p>
-        )}
         <button type="submit" className="btn btn-secondary btn-block" disabled={saving}>
           {saving ? 'Salvando…' : 'Salvar'}
         </button>

@@ -697,6 +697,33 @@ textarea {
   font-size: 0.88rem;
 }
 
+.invite-code-box {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  text-align: center;
+}
+
+.invite-code-box__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.invite-code-box__code {
+  margin: 0 0 0.85rem;
+  font-family: var(--font-serif);
+  font-size: 1.65rem;
+  letter-spacing: 0.12em;
+  color: var(--wine-deep);
+  word-break: break-all;
+}
+
 .group-panel__name {
   margin: 0 0 0.35rem;
   font-weight: 600;

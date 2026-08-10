@@ -18,8 +18,10 @@ Checklist na ordem. Projeto novo no [Supabase Dashboard](https://supabase.com/da
 3. Nova query: copie `supabase/migrations/002_check_in_photos_storage.sql`, **Run**.
 4. **Grupos:** rode **`003_communities.sql` inteiro** (obrigatório para o app), depois `004_photo_size_unlimited.sql`.
 5. **`005_circulo1_legacy_only.sql`** — só se você já tinha rodado uma versão **antiga** do `003` (que colocava todos os perfis no CIRCULO1). **Não rode o 005 antes do 003** — dá erro `community_members does not exist`.
+6. Se a galera do **Círculo Lucas** perdeu o grupo, rode **`006_restore_circulo1_members.sql`** (restaura quem já usava o app / era legado no CIRCULO1).
+7. **Obrigatório para criar/entrar em grupo e ver o código:** rode **`007_fix_community_members_rls.sql`** (corrige permissões que escondiam o grupo após criar).
 
-**Grupos:** quem já tinha conta quando o `003` rodou fica no **Comunidade Círculo Lucas** (código `CIRCULO1`). Contas **criadas depois** não entram automaticamente — precisam **criar um grupo** ou **entrar com código** na tela `/grupo`.
+**Grupos:** quem já tinha conta quando o `003` rodou fica no **Comunidade Círculo Lucas** (código `CIRCULO1`). Contas **criadas depois** não entram automaticamente — em **Conta** podem **criar um grupo** ou **entrar com código**. Se o Círculo perdeu membros, rode o **`006_restore_circulo1_members.sql`**.
 
 **Sucesso:** em **Table Editor** devem aparecer `profiles`, `activity_types`, `check_ins`, `communities`, `community_members`.  
 Em **Storage** deve existir o bucket `check-in-proofs`.

@@ -138,12 +138,48 @@ export async function createCommunity(
   const client = requireClient()
   const { data, error } = await client.rpc('create_community', { p_name: name.trim() })
   if (error) return { error: error.message }
-  const row = (data as { community_id: string; invite_code: string }[] | null)?.[0]
+
+  const row = parseCreateCommunityRow(data)
+  if (!row?.community_id) {
+    return { error: 'Grupo criado, mas o servidor não devolveu o código. Atualize a página ou rode a migration 007 no Supabase.' }
+  }
+
+  let inviteCode: string | undefined = row.invite_code || undefined
+  if (!inviteCode) {
+    const { data: community } = await client
+      .from('communities')
+      .select('invite_code')
+      .eq('id', row.community_id)
+      .maybeSingle()
+    inviteCode = community?.invite_code ?? undefined
+  }
+
   return {
     error: null,
-    communityId: row?.community_id,
-    inviteCode: row?.invite_code,
+    communityId: row.community_id,
+    inviteCode,
   }
+}
+
+function parseCreateCommunityRow(
+  data: unknown,
+): { community_id: string; invite_code: string } | null {
+  if (!data) return null
+  if (Array.isArray(data)) {
+    const first = data[0] as Record<string, string> | undefined
+    return first ? normalizeCreateCommunityRow(first) : null
+  }
+  if (typeof data === 'object') {
+    return normalizeCreateCommunityRow(data as Record<string, string>)
+  }
+  return null
+}
+
+function normalizeCreateCommunityRow(row: Record<string, string>) {
+  const communityId = row.community_id ?? row.communityId
+  const inviteCode = row.invite_code ?? row.inviteCode
+  if (!communityId) return null
+  return { community_id: communityId, invite_code: inviteCode ?? '' }
 }
 
 export async function setActiveCommunity(communityId: string): Promise<{ error: string | null }> {
