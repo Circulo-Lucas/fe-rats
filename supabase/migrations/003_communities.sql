@@ -27,7 +27,7 @@ alter table public.profiles
 alter table public.check_ins
   add column if not exists community_id uuid references public.communities (id);
 
--- Grupo padrão: membros e registros atuais
+-- Grupo padrão: quem já tinha perfil na hora desta migration
 insert into public.communities (id, name, invite_code)
 values (
   '00000000-0000-4000-8000-000000000010',
@@ -37,13 +37,19 @@ values (
 on conflict (id) do nothing;
 
 insert into public.community_members (community_id, user_id)
-select '00000000-0000-4000-8000-000000000010', p.id
+select c.id, p.id
 from public.profiles p
+cross join public.communities c
+where c.id = '00000000-0000-4000-8000-000000000010'
+  and p.created_at <= c.created_at
 on conflict do nothing;
 
-update public.profiles
-set active_community_id = '00000000-0000-4000-8000-000000000010'
-where active_community_id is null;
+update public.profiles p
+set active_community_id = c.id
+from public.communities c
+where c.id = '00000000-0000-4000-8000-000000000010'
+  and p.created_at <= c.created_at
+  and p.active_community_id is null;
 
 update public.check_ins
 set community_id = '00000000-0000-4000-8000-000000000010'

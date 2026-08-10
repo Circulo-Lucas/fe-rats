@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { fetchLeaderboard } from '../lib/data'
 import type { LeaderboardRow } from '../types/database'
 import { PageHeader } from '../components/PageHeader'
+import { NoGroupPrompt } from '../components/NoGroupPrompt'
 import { useCommunity } from '../context/CommunityContext'
 
 export function RankingPage() {
@@ -38,6 +39,9 @@ export function RankingPage() {
 
       {loading && <p className="status-line muted">Carregando…</p>}
 
+      {!loading && !community && <NoGroupPrompt />}
+
+      {community && (
       <ol className="rank-list">
         {rows.map((row, index) => (
           <li key={row.user_id} className="rank-row">
@@ -53,8 +57,9 @@ export function RankingPage() {
           </li>
         ))}
       </ol>
+      )}
 
-      {!loading && rows.length === 0 && (
+      {!loading && community && rows.length === 0 && (
         <div className="empty-state">
           <p className="muted">A lista aparece quando houver registros.</p>
         </div>

@@ -6,6 +6,7 @@ import { useCommunity } from '../context/CommunityContext'
 import { createCheckIn } from '../lib/data'
 import { PHOTO_RETENTION_DAYS, validatePhotoFile } from '../lib/photoProof'
 import { PageHeader } from '../components/PageHeader'
+import { NoGroupPrompt } from '../components/NoGroupPrompt'
 
 export function CheckInPage() {
   const { user } = useAuth()
@@ -79,6 +80,9 @@ export function CheckInPage() {
     <div className="page">
       <PageHeader title="Registrar" subtitle="Comprovante em foto da atividade" />
 
+      {!community ? (
+        <NoGroupPrompt />
+      ) : (
       <form className="checkin-form" onSubmit={handleSubmit}>
         <fieldset className="activity-grid">
           <legend className="sr-only">Tipo de atividade</legend>
@@ -143,6 +147,7 @@ export function CheckInPage() {
           {submitting ? 'Enviando…' : 'Confirmar registro'}
         </button>
       </form>
+      )}
     </div>
   )
 }

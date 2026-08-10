@@ -6,6 +6,7 @@ import type { CheckInWithProfile } from '../types/database'
 import { formatRelativeTime } from '../lib/format'
 import { getActivityById } from '../constants/activities'
 import { PageHeader } from '../components/PageHeader'
+import { NoGroupPrompt } from '../components/NoGroupPrompt'
 import { useCommunity } from '../context/CommunityContext'
 
 export function FeedPage() {
@@ -50,7 +51,9 @@ export function FeedPage() {
       {loading && <p className="status-line muted">Carregando…</p>}
       {error && <p className="status-line error">{error}</p>}
 
-      {!loading && !error && items.length === 0 && (
+      {!loading && !community && <NoGroupPrompt />}
+
+      {!loading && community && !error && items.length === 0 && (
         <div className="empty-state">
           <p className="empty-state__title">Nenhum registro ainda</p>
           <p className="muted">Use Registrar para marcar uma atividade.</p>

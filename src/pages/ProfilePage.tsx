@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCommunity } from '../context/CommunityContext'
 import {
   createCommunity,
   fetchMyPoints,
+  joinCommunityByCode,
   setActiveCommunity,
   updateDisplayName,
 } from '../lib/data'
@@ -13,6 +14,7 @@ import { PageHeader } from '../components/PageHeader'
 
 export function ProfilePage() {
   const location = useLocation()
+  const groupsRef = useRef<HTMLElement>(null)
   const { user, profile, signOut, refreshProfile } = useAuth()
   const { community, communities, refreshCommunities } = useCommunity()
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '')
@@ -22,10 +24,17 @@ export function ProfilePage() {
   const [groupBusy, setGroupBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [newInviteCode, setNewInviteCode] = useState<string | null>(null)
+  const [joinCode, setJoinCode] = useState('')
 
   useEffect(() => {
     setDisplayName(profile?.display_name ?? '')
   }, [profile?.display_name])
+
+  useEffect(() => {
+    if (location.hash === '#grupos') {
+      groupsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [location.hash, location.key])
 
   useEffect(() => {
     async function loadPoints() {
@@ -71,6 +80,21 @@ export function ProfilePage() {
     setMessage('Novo grupo criado. Compartilhe o código abaixo.')
   }
 
+  async function handleJoinByCode(e: React.FormEvent) {
+    e.preventDefault()
+    setGroupBusy(true)
+    setMessage(null)
+    const { error } = await joinCommunityByCode(joinCode)
+    setGroupBusy(false)
+    if (error) {
+      setMessage(error.toLowerCase().includes('inválido') ? 'Código inválido.' : error)
+      return
+    }
+    setJoinCode('')
+    await refreshCommunities()
+    setMessage('Você entrou no grupo.')
+  }
+
   async function handleSwitchGroup(communityId: string) {
     setGroupBusy(true)
     setMessage(null)
@@ -89,7 +113,11 @@ export function ProfilePage() {
       <PageHeader
         title="Conta"
         subtitle={
-          totalPoints !== null ? `${totalPoints} pontos neste grupo` : undefined
+          community
+            ? totalPoints !== null
+              ? `${totalPoints} pontos neste grupo`
+              : undefined
+            : 'Entrar ou criar um grupo quando quiser'
         }
       />
 
@@ -100,8 +128,14 @@ export function ProfilePage() {
         <p className="muted profile-email">{user?.email}</p>
       </div>
 
-      <section className="points-guide group-panel">
-        <h2 className="points-guide__title">Seu grupo</h2>
+      <section id="grupos" ref={groupsRef} className="points-guide group-panel">
+        <h2 className="points-guide__title">Grupos</h2>
+        {!community && (
+          <p className="muted group-panel__intro">
+            Opcional: escolha um grupo para ver o feed, o ranking e registrar atividades com o
+            pessoal da sua paróquia ou círculo.
+          </p>
+        )}
         {community && (
           <>
             <p className="group-panel__name">{community.name}</p>
@@ -110,6 +144,48 @@ export function ProfilePage() {
             </p>
           </>
         )}
+
+        {!community ? (
+          <form className="group-create" onSubmit={handleCreateGroup}>
+            <label className="field">
+              <span>Criar um grupo</span>
+              <input
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="Ex.: Paróquia São José"
+                minLength={2}
+                maxLength={60}
+              />
+            </label>
+            <button
+              type="submit"
+              className="btn btn-primary btn-block"
+              disabled={groupBusy || newGroupName.trim().length < 2}
+            >
+              {groupBusy ? 'Criando…' : 'Criar grupo e gerar código'}
+            </button>
+          </form>
+        ) : null}
+
+        <form className="group-create" onSubmit={handleJoinByCode}>
+          <label className="field">
+            <span>{community ? 'Entrar em outro grupo' : 'Entrar com código'}</span>
+            <input
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              placeholder="Código do grupo (6 a 12 caracteres)"
+              minLength={6}
+              maxLength={12}
+            />
+          </label>
+          <button
+            type="submit"
+            className="btn btn-secondary btn-block"
+            disabled={groupBusy || joinCode.trim().length < 6}
+          >
+            {groupBusy ? 'Entrando…' : 'Entrar no grupo'}
+          </button>
+        </form>
 
         {communities.length > 1 && (
           <div className="group-switch">
@@ -132,25 +208,27 @@ export function ProfilePage() {
           </div>
         )}
 
-        <form className="group-create" onSubmit={handleCreateGroup}>
-          <label className="field">
-            <span>Abrir outro grupo</span>
-            <input
-              value={newGroupName}
-              onChange={(e) => setNewGroupName(e.target.value)}
-              placeholder="Ex.: Paróquia São José"
-              minLength={2}
-              maxLength={60}
-            />
-          </label>
-          <button
-            type="submit"
-            className="btn btn-secondary btn-block"
-            disabled={groupBusy || newGroupName.trim().length < 2}
-          >
-            {groupBusy ? 'Criando…' : 'Criar grupo e gerar código'}
-          </button>
-        </form>
+        {community && (
+          <form className="group-create" onSubmit={handleCreateGroup}>
+            <label className="field">
+              <span>Abrir outro grupo</span>
+              <input
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                placeholder="Ex.: Paróquia São José"
+                minLength={2}
+                maxLength={60}
+              />
+            </label>
+            <button
+              type="submit"
+              className="btn btn-secondary btn-block"
+              disabled={groupBusy || newGroupName.trim().length < 2}
+            >
+              {groupBusy ? 'Criando…' : 'Criar grupo e gerar código'}
+            </button>
+          </form>
+        )}
 
         {newInviteCode && (
           <p className="success">
@@ -171,7 +249,7 @@ export function ProfilePage() {
           />
         </label>
         {message && (
-          <p className={message.includes('atualizado') || message.includes('criado') || message.includes('alterado') ? 'success' : 'error'}>
+          <p className={message.includes('atualizado') || message.includes('criado') || message.includes('alterado') || message.includes('entrou') ? 'success' : 'error'}>
             {message}
           </p>
         )}

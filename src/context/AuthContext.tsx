@@ -10,7 +10,6 @@ import {
 import type { Session, User } from '@supabase/supabase-js'
 import { isSupabaseConfigured, supabase } from '../lib/supabase'
 import { mapAuthError } from '../lib/authErrors'
-import { joinCommunityByCode } from '../lib/data'
 import type { Profile } from '../types/database'
 
 type AuthContextValue = {
@@ -24,7 +23,6 @@ type AuthContextValue = {
     email: string,
     password: string,
     displayName: string,
-    inviteCode: string,
   ) => Promise<{ error: string | null; signedIn: boolean }>
   signOut: () => Promise<void>
   refreshProfile: () => Promise<void>
@@ -81,53 +79,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     if (!supabase) return { error: 'Supabase não configurado.' }
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) return { error: mapAuthError(error.message) }
-
-    const pending = sessionStorage.getItem('ferats_pending_invite')
-    if (pending) {
-      const join = await joinCommunityByCode(pending)
-      sessionStorage.removeItem('ferats_pending_invite')
-      if (join.error) {
-        return {
-          error: join.error.includes('inválido')
-            ? 'Código de grupo inválido.'
-            : join.error,
-        }
-      }
-    }
-
-    return { error: null }
+    return { error: error ? mapAuthError(error.message) : null }
   }, [])
 
-  const signUp = useCallback(
-    async (email: string, password: string, displayName: string, inviteCode: string) => {
-      if (!supabase) return { error: 'Supabase não configurado.', signedIn: false }
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { data: { display_name: displayName } },
-      })
-      if (error) return { error: mapAuthError(error.message), signedIn: false }
-
-      if (!data.session) {
-        sessionStorage.setItem('ferats_pending_invite', inviteCode.trim().toUpperCase())
-        return { error: null, signedIn: false }
-      }
-
-      const join = await joinCommunityByCode(inviteCode)
-      if (join.error) {
-        return {
-          error: join.error.includes('inválido')
-            ? 'Código de grupo inválido.'
-            : join.error,
-          signedIn: false,
-        }
-      }
-
-      return { error: null, signedIn: Boolean(data.session) }
-    },
-    [],
-  )
+  const signUp = useCallback(async (email: string, password: string, displayName: string) => {
+    if (!supabase) return { error: 'Supabase não configurado.', signedIn: false }
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { display_name: displayName } },
+    })
+    if (error) return { error: mapAuthError(error.message), signedIn: false }
+    return { error: null, signedIn: Boolean(data.session) }
+  }, [])
 
   const signOut = useCallback(async () => {
     if (supabase) await supabase.auth.signOut()

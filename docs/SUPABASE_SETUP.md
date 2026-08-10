@@ -16,8 +16,12 @@ Checklist na ordem. Projeto novo no [Supabase Dashboard](https://supabase.com/da
 1. Menu **SQL Editor** → **New query**.
 2. Copie **todo** o conteúdo de `supabase/migrations/001_initial.sql`, cole e **Run**.
 3. Nova query: copie `supabase/migrations/002_check_in_photos_storage.sql`, **Run**.
+4. **Grupos:** rode **`003_communities.sql` inteiro** (obrigatório para o app), depois `004_photo_size_unlimited.sql`.
+5. **`005_circulo1_legacy_only.sql`** — só se você já tinha rodado uma versão **antiga** do `003` (que colocava todos os perfis no CIRCULO1). **Não rode o 005 antes do 003** — dá erro `community_members does not exist`.
 
-**Sucesso:** em **Table Editor** devem aparecer `profiles`, `activity_types`, `check_ins`.  
+**Grupos:** quem já tinha conta quando o `003` rodou fica no **Comunidade Círculo Lucas** (código `CIRCULO1`). Contas **criadas depois** não entram automaticamente — precisam **criar um grupo** ou **entrar com código** na tela `/grupo`.
+
+**Sucesso:** em **Table Editor** devem aparecer `profiles`, `activity_types`, `check_ins`, `communities`, `community_members`.  
 Em **Storage** deve existir o bucket `check-in-proofs`.
 
 ### Se você já tinha rodado o `001` antigo (sem colunas de foto)

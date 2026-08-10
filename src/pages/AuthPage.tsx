@@ -9,7 +9,6 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
-  const [inviteCode, setInviteCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -39,7 +38,7 @@ export function AuthPage() {
       return
     }
 
-    const result = await signUp(email, password, displayName, inviteCode)
+    const result = await signUp(email, password, displayName)
     setPending(false)
     if (result.error) {
       setError(result.error)
@@ -47,7 +46,7 @@ export function AuthPage() {
     }
     if (result.signedIn) return
     setMode('login')
-    setInfo('Conta criada. Agora entre com seu e-mail e senha.')
+    setInfo('Conta criada. Entre com seu e-mail e senha para continuar.')
   }
 
   return (
@@ -85,29 +84,15 @@ export function AuthPage() {
 
         <form onSubmit={handleSubmit} className="auth-form">
           {mode === 'signup' && (
-            <>
-              <label className="field">
-                <span>Nome</span>
-                <input
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                  required
-                  autoComplete="name"
-                />
-              </label>
-              <label className="field">
-                <span>Código do grupo</span>
-                <input
-                  value={inviteCode}
-                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  required
-                  minLength={6}
-                  maxLength={12}
-                  placeholder="Quem criou o grupo passa o código"
-                  autoComplete="off"
-                />
-              </label>
-            </>
+            <label className="field">
+              <span>Nome</span>
+              <input
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                autoComplete="name"
+              />
+            </label>
           )}
           <label className="field">
             <span>E-mail</span>
@@ -130,6 +115,11 @@ export function AuthPage() {
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
           </label>
+          {mode === 'signup' && (
+            <p className="auth-hint muted">
+              Depois do cadastro, em <strong>Conta</strong> você pode entrar ou criar um grupo — não é obrigatório na hora.
+            </p>
+          )}
           {info && <p className="success">{info}</p>}
           {error && <p className="error">{error}</p>}
           <button type="submit" className="btn btn-primary btn-block" disabled={pending}>
