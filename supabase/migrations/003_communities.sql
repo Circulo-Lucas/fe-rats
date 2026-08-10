@@ -133,9 +133,9 @@ begin
 end;
 $$;
 
--- Criar novo grupo (você continua no antigo; passa a ver o novo)
+-- Criar novo grupo (criador entra automaticamente)
 create or replace function public.create_community(p_name text)
-returns table (community_id uuid, invite_code text)
+returns jsonb
 language plpgsql
 security definer
 set search_path = public
@@ -163,7 +163,7 @@ begin
       exit;
     exception when unique_violation then
       v_attempts := v_attempts + 1;
-      if v_attempts > 10 then
+      if v_attempts > 15 then
         raise exception 'Não foi possível gerar código único';
       end if;
     end;
@@ -177,7 +177,7 @@ begin
   set active_community_id = v_id
   where id = v_user_id;
 
-  return query select v_id, v_code;
+  return jsonb_build_object('community_id', v_id, 'invite_code', v_code);
 end;
 $$;
 
@@ -210,32 +210,31 @@ grant execute on function public.set_active_community(uuid) to authenticated;
 alter table public.communities enable row level security;
 alter table public.community_members enable row level security;
 
-create policy "Membro vê seus grupos"
+create policy "communities_select_member_or_creator"
   on public.communities for select
   to authenticated
   using (
-    exists (
+    created_by = auth.uid()
+    or exists (
       select 1 from public.community_members cm
-      where cm.community_id = id and cm.user_id = auth.uid()
+      where cm.community_id = communities.id and cm.user_id = auth.uid()
     )
   );
 
-create policy "Usuário vê próprias participações"
+create policy "communities_insert_creator"
+  on public.communities for insert
+  to authenticated
+  with check (created_by = auth.uid());
+
+create policy "community_members_select_own"
   on public.community_members for select
   to authenticated
   using (user_id = auth.uid());
 
-create policy "Membro vê participantes do mesmo grupo"
-  on public.community_members for select
+create policy "community_members_insert_self"
+  on public.community_members for insert
   to authenticated
-  using (
-    exists (
-      select 1
-      from public.community_members mine
-      where mine.user_id = auth.uid()
-        and mine.community_id = community_members.community_id
-    )
-  );
+  with check (user_id = auth.uid());
 
 -- Check-ins: só o grupo ativo
 drop policy if exists "Check-ins visíveis para autenticados" on public.check_ins;

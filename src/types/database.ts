@@ -150,7 +150,7 @@ export interface Database {
       }
       create_community: {
         Args: { p_name: string }
-        Returns: { community_id: string; invite_code: string }[]
+        Returns: Json
       }
       set_active_community: {
         Args: { p_community_id: string }

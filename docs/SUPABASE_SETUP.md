@@ -19,7 +19,7 @@ Checklist na ordem. Projeto novo no [Supabase Dashboard](https://supabase.com/da
 4. **Grupos:** rode **`003_communities.sql` inteiro** (obrigatório para o app), depois `004_photo_size_unlimited.sql`.
 5. **`005_circulo1_legacy_only.sql`** — só se você já tinha rodado uma versão **antiga** do `003` (que colocava todos os perfis no CIRCULO1). **Não rode o 005 antes do 003** — dá erro `community_members does not exist`.
 6. Se a galera do **Círculo Lucas** perdeu o grupo, rode **`006_restore_circulo1_members.sql`** (restaura quem já usava o app / era legado no CIRCULO1).
-7. **Obrigatório para criar/entrar em grupo e ver o código:** rode **`007_fix_community_members_rls.sql`** (corrige permissões que escondiam o grupo após criar).
+7. **Criar / entrar em grupo:** rode **`008_groups_create_join_fix.sql`** (policies + função `create_community` em JSON).
 
 **Grupos:** quem já tinha conta quando o `003` rodou fica no **Comunidade Círculo Lucas** (código `CIRCULO1`). Contas **criadas depois** não entram automaticamente — em **Conta** podem **criar um grupo** ou **entrar com código**. Se o Círculo perdeu membros, rode o **`006_restore_circulo1_members.sql`**.
 

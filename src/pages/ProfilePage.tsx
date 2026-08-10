@@ -76,11 +76,11 @@ export function ProfilePage() {
     }
     setNewGroupName('')
     setNewInviteCode(inviteCode ?? null)
+    await refreshProfile()
     await refreshCommunities()
     setGroupBusy(false)
-    const code = inviteCode ?? null
-    if (!code) {
-      setMessage('Grupo criado, mas não foi possível carregar o código. Rode a migration 007 no Supabase e atualize a página.')
+    if (!inviteCode) {
+      setMessage('Grupo criado, mas o código não apareceu. Atualize a página.')
       return
     }
     setMessage('Grupo criado. Compartilhe o código abaixo para outras pessoas entrarem.')
@@ -109,6 +109,7 @@ export function ProfilePage() {
       return
     }
     setJoinCode('')
+    await refreshProfile()
     await refreshCommunities()
     setMessage('Você entrou no grupo.')
   }

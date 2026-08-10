@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { photoExpiresAt } from './photoProof'
+import { generateInviteCode, mapCommunityError } from './communities'
 import type { CheckInWithProfile, Community, LeaderboardRow } from '../types/database'
 
 const BUCKET = 'check-in-proofs'
@@ -128,58 +129,103 @@ export async function updateDisplayName(
 
 export async function joinCommunityByCode(code: string): Promise<{ error: string | null }> {
   const client = requireClient()
-  const { error } = await client.rpc('join_community_by_code', { p_code: code.trim() })
-  return { error: error?.message ?? null }
+  const normalized = code.trim().toUpperCase()
+  const { error } = await client.rpc('join_community_by_code', { p_code: normalized })
+  if (error) return { error: mapCommunityError(error.message) }
+  return { error: null }
 }
 
 export async function createCommunity(
   name: string,
 ): Promise<{ error: string | null; inviteCode?: string; communityId?: string }> {
+  const trimmed = name.trim()
+  if (trimmed.length < 2) return { error: 'Nome do grupo muito curto.' }
+
   const client = requireClient()
-  const { data, error } = await client.rpc('create_community', { p_name: name.trim() })
-  if (error) return { error: error.message }
+  const {
+    data: { user },
+  } = await client.auth.getUser()
+  if (!user) return { error: 'Sessão expirada. Entre de novo.' }
 
-  const row = parseCreateCommunityRow(data)
-  if (!row?.community_id) {
-    return { error: 'Grupo criado, mas o servidor não devolveu o código. Atualize a página ou rode a migration 007 no Supabase.' }
+  const rpc = await client.rpc('create_community', { p_name: trimmed })
+  if (!rpc.error && rpc.data) {
+    const parsed = parseCreateCommunityPayload(rpc.data)
+    if (parsed?.community_id && parsed.invite_code) {
+      return {
+        error: null,
+        communityId: parsed.community_id,
+        inviteCode: parsed.invite_code,
+      }
+    }
   }
 
-  let inviteCode: string | undefined = row.invite_code || undefined
-  if (!inviteCode) {
-    const { data: community } = await client
-      .from('communities')
-      .select('invite_code')
-      .eq('id', row.community_id)
-      .maybeSingle()
-    inviteCode = community?.invite_code ?? undefined
+  const rpcHint = rpc.error?.message ? mapCommunityError(rpc.error.message) : null
+  const direct = await createCommunityDirect(client, user.id, trimmed)
+  if (direct.error) {
+    return { error: rpcHint ? `${direct.error} (${rpcHint})` : direct.error }
   }
-
-  return {
-    error: null,
-    communityId: row.community_id,
-    inviteCode,
-  }
+  return direct
 }
 
-function parseCreateCommunityRow(
+async function createCommunityDirect(
+  client: NonNullable<typeof supabase>,
+  userId: string,
+  name: string,
+): Promise<{ error: string | null; inviteCode?: string; communityId?: string }> {
+  for (let attempt = 0; attempt < 12; attempt++) {
+    const code = generateInviteCode()
+    const { data: row, error: insertError } = await client
+      .from('communities')
+      .insert({ name, invite_code: code, created_by: userId })
+      .select('id, invite_code')
+      .single()
+
+    if (insertError) {
+      if (insertError.code === '23505') continue
+      return { error: mapCommunityError(insertError.message) }
+    }
+
+    const { error: memberError } = await client.from('community_members').insert({
+      community_id: row.id,
+      user_id: userId,
+    })
+    if (memberError) {
+      return { error: mapCommunityError(memberError.message) }
+    }
+
+    const { error: profileError } = await client
+      .from('profiles')
+      .update({ active_community_id: row.id })
+      .eq('id', userId)
+    if (profileError) {
+      return { error: mapCommunityError(profileError.message) }
+    }
+
+    return { error: null, communityId: row.id, inviteCode: row.invite_code }
+  }
+
+  return { error: 'Não foi possível gerar um código único. Tente de novo.' }
+}
+
+function parseCreateCommunityPayload(
   data: unknown,
 ): { community_id: string; invite_code: string } | null {
   if (!data) return null
-  if (Array.isArray(data)) {
-    const first = data[0] as Record<string, string> | undefined
-    return first ? normalizeCreateCommunityRow(first) : null
-  }
-  if (typeof data === 'object') {
-    return normalizeCreateCommunityRow(data as Record<string, string>)
-  }
-  return null
-}
 
-function normalizeCreateCommunityRow(row: Record<string, string>) {
-  const communityId = row.community_id ?? row.communityId
-  const inviteCode = row.invite_code ?? row.inviteCode
-  if (!communityId) return null
-  return { community_id: communityId, invite_code: inviteCode ?? '' }
+  if (typeof data === 'object' && !Array.isArray(data)) {
+    const row = data as Record<string, unknown>
+    const communityId = String(row.community_id ?? row.communityId ?? '')
+    const inviteCode = String(row.invite_code ?? row.inviteCode ?? '')
+    if (communityId && inviteCode) {
+      return { community_id: communityId, invite_code: inviteCode.toUpperCase() }
+    }
+  }
+
+  if (Array.isArray(data) && data[0]) {
+    return parseCreateCommunityPayload(data[0])
+  }
+
+  return null
 }
 
 export async function setActiveCommunity(communityId: string): Promise<{ error: string | null }> {
@@ -200,24 +246,25 @@ export async function fetchMyCommunities(userId: string): Promise<MyCommunity[]>
     .eq('id', userId)
     .single()
 
-  const { data: memberships } = await client
+  const { data: memberships, error: memberError } = await client
     .from('community_members')
-    .select('community_id, communities ( id, name, invite_code, created_at )')
+    .select('community_id')
     .eq('user_id', userId)
 
-  if (!memberships) return []
+  if (memberError || !memberships?.length) return []
 
-  return memberships
-    .map((m) => {
-      const raw = m.communities
-      const c = (Array.isArray(raw) ? raw[0] : raw) as Community | null
-      if (!c) return null
-      return {
-        ...c,
-        is_active: c.id === profile?.active_community_id,
-      }
-    })
-    .filter((x): x is MyCommunity => x !== null)
+  const ids = memberships.map((m) => m.community_id)
+  const { data: communities, error: commError } = await client
+    .from('communities')
+    .select('id, name, invite_code, created_at, created_by')
+    .in('id', ids)
+
+  if (commError || !communities) return []
+
+  return communities.map((c) => ({
+    ...c,
+    is_active: c.id === profile?.active_community_id,
+  }))
 }
 
 export async function fetchActiveCommunity(userId: string): Promise<Community | null> {
@@ -230,11 +277,12 @@ export async function fetchActiveCommunity(userId: string): Promise<Community | 
 
   if (!profile?.active_community_id) return null
 
-  const { data } = await client
+  const { data, error } = await client
     .from('communities')
     .select('*')
     .eq('id', profile.active_community_id)
-    .single()
+    .maybeSingle()
 
+  if (error) return null
   return data ?? null
 }
