@@ -40,19 +40,49 @@ As políticas de Storage já existem. Pode ignorar se o bucket `check-in-proofs`
 
 ## 3. Autenticação (login com e-mail, **sem** confirmar e-mail)
 
-1. **Authentication** → **Providers** → **Email**.
-2. Deixe **Enable Email provider** ligado.
-3. **Desligue** **Confirm email** e salve — cadastro entra direto, sem link no e-mail (recomendado para o FéRats).
+Link direto do seu projeto:  
+**https://supabase.com/dashboard/project/kcbeuvvoyorcddhbajnt/auth/providers**
 
-O repositório já traz `supabase/config.toml` com `enable_confirmations = false`. Para aplicar no projeto na nuvem (alternativa ao passo 3 manual):
+### Onde está “Confirm email” (o menu mudou em 2025)
+
+Tente **nesta ordem**:
+
+**Opção A — Sign In / Providers (mais comum)**  
+1. Menu lateral **Authentication**  
+2. **Sign In / Providers** (ou só **Providers**)  
+3. Role até **User Signups** / configurações gerais de cadastro  
+4. Desligue **Confirm email** → **Save**
+
+**Opção B — Provedor Email**  
+1. **Authentication** → **Sign In / Providers**  
+2. Clique em **Email** para expandir  
+3. Desligue **Confirm email** (se aparecer aí) → **Save**
+
+**Opção C — Não achou o toggle**  
+Use o SQL abaixo (funciona mesmo sem achar o botão) e cadastre de novo ou use **Entrar**.
+
+No **SQL Editor**, rode **uma vez**:
+
+```sql
+UPDATE auth.users
+SET email_confirmed_at = COALESCE(email_confirmed_at, now()),
+    updated_at = now()
+WHERE email_confirmed_at IS NULL;
+```
+
+(O mesmo conteúdo está em `supabase/scripts/confirm-existing-users.sql`.)
+
+Para **novos** cadastros sem e-mail, ainda vale a pena desligar **Confirm email** na Opção A ou B quando encontrar.
+
+### CLI (alternativa ao painel)
+
+O repositório traz `supabase/config.toml` com `enable_confirmations = false`:
 
 ```bash
 npx supabase login
 npx supabase link --project-ref kcbeuvvoyorcddhbajnt
 npx supabase config push
 ```
-
-4. Contas antigas sem confirmar: rode **uma vez** `supabase/scripts/confirm-existing-users.sql` no SQL Editor.
 
 ### Limite “email rate limit exceeded”
 
@@ -121,7 +151,7 @@ Sem essas variáveis, em produção a tela `/entrar` mostra aviso de Supabase n�
 **Storage** → bucket `check-in-proofs`:
 
 - **Public bucket**: ligado (o app usa URL pública; leitura exige usuário logado via policy).
-- **File size limit**: 5 MB (5242880 bytes).
+- **File size limit**: sem limite no bucket (usa só o teto global do Supabase no seu plano).
 - **Allowed MIME types**: jpeg, png, webp, heic, heif (se a UI do Supabase permitir editar).
 
 Policies esperadas (3):

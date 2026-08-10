@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { photoExpiresAt } from './photoProof'
-import type { CheckInWithProfile, LeaderboardRow } from '../types/database'
+import type { CheckInWithProfile, Community, LeaderboardRow } from '../types/database'
 
 const BUCKET = 'check-in-proofs'
 
@@ -9,7 +9,17 @@ function requireClient() {
   return supabase
 }
 
-export async function fetchFeed(): Promise<{
+export async function getActiveCommunityId(userId: string): Promise<string | null> {
+  const client = requireClient()
+  const { data } = await client
+    .from('profiles')
+    .select('active_community_id')
+    .eq('id', userId)
+    .single()
+  return data?.active_community_id ?? null
+}
+
+export async function fetchFeed(communityId: string): Promise<{
   data: CheckInWithProfile[] | null
   error: string | null
 }> {
@@ -23,6 +33,7 @@ export async function fetchFeed(): Promise<{
       activity_types ( label, points, emoji )
     `,
     )
+    .eq('community_id', communityId)
     .order('occurred_at', { ascending: false })
     .limit(50)
   return { data: (data as CheckInWithProfile[]) ?? null, error: error?.message ?? null }
@@ -30,10 +41,10 @@ export async function fetchFeed(): Promise<{
 
 export type CreateCheckInInput = {
   userId: string
+  communityId: string
   activityTypeId: string
   note: string | null
   photoFile: File
-  photoTakenAt: Date
 }
 
 export async function createCheckIn(input: CreateCheckInInput): Promise<{ error: string | null }> {
@@ -63,11 +74,12 @@ export async function createCheckIn(input: CreateCheckInInput): Promise<{ error:
   const { error: insertError } = await client.from('check_ins').insert({
     id: checkInId,
     user_id: input.userId,
+    community_id: input.communityId,
     activity_type_id: input.activityTypeId,
     note: input.note,
     photo_url: publicUrlData.publicUrl,
     photo_storage_path: storagePath,
-    photo_taken_at: input.photoTakenAt.toISOString(),
+    photo_taken_at: occurredAt,
     photo_expires_at: expiresAt,
     occurred_at: occurredAt,
   })
@@ -80,22 +92,24 @@ export async function createCheckIn(input: CreateCheckInInput): Promise<{ error:
   return { error: null }
 }
 
-export async function fetchLeaderboard(): Promise<LeaderboardRow[]> {
+export async function fetchLeaderboard(communityId: string): Promise<LeaderboardRow[]> {
   const client = requireClient()
   const { data } = await client
     .from('leaderboard')
     .select('*')
+    .eq('community_id', communityId)
     .order('total_points', { ascending: false })
     .limit(50)
   return data ?? []
 }
 
-export async function fetchMyPoints(userId: string): Promise<number> {
+export async function fetchMyPoints(userId: string, communityId: string): Promise<number> {
   const client = requireClient()
   const { data } = await client
     .from('leaderboard')
     .select('total_points')
     .eq('user_id', userId)
+    .eq('community_id', communityId)
     .maybeSingle()
   return data?.total_points ?? 0
 }
@@ -110,4 +124,81 @@ export async function updateDisplayName(
     .update({ display_name: displayName.trim() })
     .eq('id', userId)
   return { error: error?.message ?? null }
+}
+
+export async function joinCommunityByCode(code: string): Promise<{ error: string | null }> {
+  const client = requireClient()
+  const { error } = await client.rpc('join_community_by_code', { p_code: code.trim() })
+  return { error: error?.message ?? null }
+}
+
+export async function createCommunity(
+  name: string,
+): Promise<{ error: string | null; inviteCode?: string; communityId?: string }> {
+  const client = requireClient()
+  const { data, error } = await client.rpc('create_community', { p_name: name.trim() })
+  if (error) return { error: error.message }
+  const row = (data as { community_id: string; invite_code: string }[] | null)?.[0]
+  return {
+    error: null,
+    communityId: row?.community_id,
+    inviteCode: row?.invite_code,
+  }
+}
+
+export async function setActiveCommunity(communityId: string): Promise<{ error: string | null }> {
+  const client = requireClient()
+  const { error } = await client.rpc('set_active_community', {
+    p_community_id: communityId,
+  })
+  return { error: error?.message ?? null }
+}
+
+export type MyCommunity = Community & { is_active: boolean }
+
+export async function fetchMyCommunities(userId: string): Promise<MyCommunity[]> {
+  const client = requireClient()
+  const { data: profile } = await client
+    .from('profiles')
+    .select('active_community_id')
+    .eq('id', userId)
+    .single()
+
+  const { data: memberships } = await client
+    .from('community_members')
+    .select('community_id, communities ( id, name, invite_code, created_at )')
+    .eq('user_id', userId)
+
+  if (!memberships) return []
+
+  return memberships
+    .map((m) => {
+      const raw = m.communities
+      const c = (Array.isArray(raw) ? raw[0] : raw) as Community | null
+      if (!c) return null
+      return {
+        ...c,
+        is_active: c.id === profile?.active_community_id,
+      }
+    })
+    .filter((x): x is MyCommunity => x !== null)
+}
+
+export async function fetchActiveCommunity(userId: string): Promise<Community | null> {
+  const client = requireClient()
+  const { data: profile } = await client
+    .from('profiles')
+    .select('active_community_id')
+    .eq('id', userId)
+    .single()
+
+  if (!profile?.active_community_id) return null
+
+  const { data } = await client
+    .from('communities')
+    .select('*')
+    .eq('id', profile.active_community_id)
+    .single()
+
+  return data ?? null
 }

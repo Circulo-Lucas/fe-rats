@@ -6,19 +6,26 @@ import type { CheckInWithProfile } from '../types/database'
 import { formatRelativeTime } from '../lib/format'
 import { getActivityById } from '../constants/activities'
 import { PageHeader } from '../components/PageHeader'
+import { useCommunity } from '../context/CommunityContext'
 
 export function FeedPage() {
   const location = useLocation()
+  const { community } = useCommunity()
   const [items, setItems] = useState<CheckInWithProfile[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
+      if (!community) {
+        setItems([])
+        setLoading(false)
+        return
+      }
       setLoading(true)
       setError(null)
       try {
-        const { data, error: err } = await fetchFeed()
+        const { data, error: err } = await fetchFeed(community.id)
         if (err) setError(err)
         else setItems(data ?? [])
       } catch {
@@ -27,11 +34,18 @@ export function FeedPage() {
       setLoading(false)
     }
     void load()
-  }, [location.key])
+  }, [location.key, community?.id])
 
   return (
     <div className="page">
-      <PageHeader showBrand subtitle="O que a comunidade registrou" />
+      <PageHeader
+        showBrand
+        subtitle={
+          community
+            ? `${community.name} — o que o grupo registrou`
+            : 'O que a comunidade registrou'
+        }
+      />
 
       {loading && <p className="status-line muted">Carregando…</p>}
       {error && <p className="status-line error">{error}</p>}

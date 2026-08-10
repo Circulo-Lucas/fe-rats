@@ -2,26 +2,20 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ACTIVITY_TYPES, type ActivityTypeId } from '../constants/activities'
 import { useAuth } from '../context/AuthContext'
+import { useCommunity } from '../context/CommunityContext'
 import { createCheckIn } from '../lib/data'
-import {
-  PHOTO_RETENTION_DAYS,
-  readPhotoTakenAt,
-  validatePhotoFile,
-  verifyPhotoMatchesCheckIn,
-} from '../lib/photoProof'
+import { PHOTO_RETENTION_DAYS, validatePhotoFile } from '../lib/photoProof'
 import { PageHeader } from '../components/PageHeader'
 
 export function CheckInPage() {
   const { user } = useAuth()
+  const { community } = useCommunity()
   const navigate = useNavigate()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [activityId, setActivityId] = useState<ActivityTypeId | null>(null)
   const [note, setNote] = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
-  const [photoTakenAt, setPhotoTakenAt] = useState<Date | null>(null)
-  const [photoHint, setPhotoHint] = useState<string | null>(null)
-  const [analyzingPhoto, setAnalyzingPhoto] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -31,10 +25,8 @@ export function CheckInPage() {
     }
   }, [photoPreview])
 
-  async function onPhotoSelected(file: File | undefined) {
+  function onPhotoSelected(file: File | undefined) {
     setError(null)
-    setPhotoHint(null)
-    setPhotoTakenAt(null)
     if (photoPreview) URL.revokeObjectURL(photoPreview)
     setPhotoPreview(null)
     setPhotoFile(null)
@@ -44,39 +36,17 @@ export function CheckInPage() {
     const fileError = validatePhotoFile(file)
     if (fileError) {
       setError(fileError)
-      return
-    }
-
-    setAnalyzingPhoto(true)
-    const takenAt = await readPhotoTakenAt(file)
-    setAnalyzingPhoto(false)
-
-    if (!takenAt) {
-      setError(
-        'Não encontramos data e hora na foto. Tire a imagem na hora com a câmera (não use print ou foto baixada).',
-      )
-      if (fileInputRef.current) fileInputRef.current.value = ''
-      return
-    }
-
-    const check = verifyPhotoMatchesCheckIn(takenAt)
-    if (!check.ok) {
-      setError(check.message)
       if (fileInputRef.current) fileInputRef.current.value = ''
       return
     }
 
     setPhotoFile(file)
-    setPhotoTakenAt(takenAt)
     setPhotoPreview(URL.createObjectURL(file))
-    setPhotoHint(
-      `Foto de ${takenAt.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} — mesmo dia do registro.`,
-    )
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    if (!user || !activityId || !photoFile || !photoTakenAt) {
+    if (!user || !community || !activityId || !photoFile) {
       setError('Selecione a atividade e envie uma foto de comprovação.')
       return
     }
@@ -86,10 +56,10 @@ export function CheckInPage() {
 
     const { error: insertError } = await createCheckIn({
       userId: user.id,
+      communityId: community.id,
       activityTypeId: activityId,
       note: note.trim() || null,
       photoFile,
-      photoTakenAt,
     })
 
     setSubmitting(false)
@@ -103,14 +73,11 @@ export function CheckInPage() {
   }
 
   const selected = ACTIVITY_TYPES.find((a) => a.id === activityId)
-  const canSubmit = Boolean(activityId && photoFile && photoTakenAt && !analyzingPhoto)
+  const canSubmit = Boolean(activityId && photoFile && community)
 
   return (
     <div className="page">
-      <PageHeader
-        title="Registrar"
-        subtitle="Foto na hora da atividade para validar os pontos"
-      />
+      <PageHeader title="Registrar" subtitle="Comprovante em foto da atividade" />
 
       <form className="checkin-form" onSubmit={handleSubmit}>
         <fieldset className="activity-grid">
@@ -143,16 +110,13 @@ export function CheckInPage() {
               type="file"
               accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
               capture="environment"
-              onChange={(e) => void onPhotoSelected(e.target.files?.[0])}
+              onChange={(e) => onPhotoSelected(e.target.files?.[0])}
             />
           </label>
           <p className="photo-proof__help muted">
-            A data da foto (EXIF) precisa ser o mesmo dia do registro. A imagem
-            fica visível por {PHOTO_RETENTION_DAYS} dias e depois é removida do servidor; os pontos
+            A foto fica visível por {PHOTO_RETENTION_DAYS} dias e depois é removida; os pontos
             permanecem.
           </p>
-          {analyzingPhoto && <p className="muted">Lendo data da foto…</p>}
-          {photoHint && <p className="success">{photoHint}</p>}
           {photoPreview && (
             <img src={photoPreview} alt="Prévia do comprovante" className="photo-proof__preview" />
           )}

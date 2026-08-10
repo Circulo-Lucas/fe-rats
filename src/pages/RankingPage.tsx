@@ -3,28 +3,38 @@ import { useLocation } from 'react-router-dom'
 import { fetchLeaderboard } from '../lib/data'
 import type { LeaderboardRow } from '../types/database'
 import { PageHeader } from '../components/PageHeader'
+import { useCommunity } from '../context/CommunityContext'
 
 export function RankingPage() {
   const location = useLocation()
+  const { community } = useCommunity()
   const [rows, setRows] = useState<LeaderboardRow[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function load() {
+      if (!community) {
+        setRows([])
+        setLoading(false)
+        return
+      }
       setLoading(true)
       try {
-        setRows(await fetchLeaderboard())
+        setRows(await fetchLeaderboard(community.id))
       } catch {
         setRows([])
       }
       setLoading(false)
     }
     void load()
-  }, [location.key])
+  }, [location.key, community?.id])
 
   return (
     <div className="page">
-      <PageHeader title="Pontuação" subtitle="Soma de todos os registros" />
+      <PageHeader
+        title="Pontuação"
+        subtitle={community ? `Grupo: ${community.name}` : 'Soma de todos os registros'}
+      />
 
       {loading && <p className="status-line muted">Carregando…</p>}
 

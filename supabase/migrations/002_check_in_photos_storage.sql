@@ -5,7 +5,7 @@ values (
   'check-in-proofs',
   'check-in-proofs',
   true,
-  5242880,
+  null,
   array['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif']
 )
 on conflict (id) do update set

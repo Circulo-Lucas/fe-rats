@@ -697,6 +697,80 @@ textarea {
   font-size: 0.88rem;
 }
 
+.group-panel__name {
+  margin: 0 0 0.35rem;
+  font-weight: 600;
+  font-size: 1.05rem;
+}
+
+.group-panel__code {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  color: var(--muted);
+}
+
+.group-panel__code strong {
+  color: var(--wine);
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+  letter-spacing: 0.06em;
+}
+
+.group-switch {
+  margin-bottom: 1rem;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+.group-switch-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.group-switch-btn {
+  width: 100%;
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.group-switch-btn.active {
+  border-color: var(--wine);
+  background: var(--surface-muted);
+}
+
+.group-switch-btn:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.group-create {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+}
+
+.group-panel {
+  margin-bottom: 1.25rem;
+}
+
 .profile-form {
   display: flex;
   flex-direction: column;

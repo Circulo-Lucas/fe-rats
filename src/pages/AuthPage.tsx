@@ -9,6 +9,7 @@ export function AuthPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [inviteCode, setInviteCode] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
@@ -38,7 +39,7 @@ export function AuthPage() {
       return
     }
 
-    const result = await signUp(email, password, displayName)
+    const result = await signUp(email, password, displayName, inviteCode)
     setPending(false)
     if (result.error) {
       setError(result.error)
@@ -84,15 +85,29 @@ export function AuthPage() {
 
         <form onSubmit={handleSubmit} className="auth-form">
           {mode === 'signup' && (
-            <label className="field">
-              <span>Nome</span>
-              <input
-                value={displayName}
-                onChange={(e) => setDisplayName(e.target.value)}
-                required
-                autoComplete="name"
-              />
-            </label>
+            <>
+              <label className="field">
+                <span>Nome</span>
+                <input
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  required
+                  autoComplete="name"
+                />
+              </label>
+              <label className="field">
+                <span>Código do grupo</span>
+                <input
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
+                  required
+                  minLength={6}
+                  maxLength={12}
+                  placeholder="Quem criou o grupo passa o código"
+                  autoComplete="off"
+                />
+              </label>
+            </>
           )}
           <label className="field">
             <span>E-mail</span>
@@ -117,11 +132,7 @@ export function AuthPage() {
           </label>
           {info && <p className="success">{info}</p>}
           {error && <p className="error">{error}</p>}
-          <button
-            type="submit"
-            className="btn btn-primary btn-block"
-            disabled={pending}
-          >
+          <button type="submit" className="btn btn-primary btn-block" disabled={pending}>
             {pending ? 'Aguarde…' : mode === 'login' ? 'Entrar' : 'Criar conta'}
           </button>
         </form>
