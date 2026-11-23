@@ -22,7 +22,7 @@ create table public.community_members (
 create index community_members_community_idx on public.community_members (community_id);
 
 alter table public.profiles
-  add column if not exists active_community_id uuid references public.communities (id);
+  add column if not exists active_community_id uuid references public.communities (id) on delete set null;
 
 alter table public.check_ins
   add column if not exists community_id uuid references public.communities (id);

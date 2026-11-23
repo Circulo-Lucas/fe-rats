@@ -3,8 +3,10 @@ export type ActivityTypeId =
   | 'missa_dominical'
   | 'adoracao'
   | 'missa_semana'
-  | 'sacramentos'
+  | 'confissao'
   | 'eventos_sgm'
+  | 'encontro_familia'
+  | 'terco'
 
 export type ActivityTone = 'circulo' | 'missa' | 'oracao' | 'sacramento' | 'comunidade'
 
@@ -23,13 +25,15 @@ export const ACTIVITY_TYPES: {
     tone: 'oracao',
   },
   { id: 'missa_semana', label: 'Missa em meio de semana', points: 1, tone: 'missa' },
-  { id: 'sacramentos', label: 'Sacramentos', points: 1, tone: 'sacramento' },
+  { id: 'confissao', label: 'Confissão', points: 15, tone: 'sacramento' },
   {
     id: 'eventos_sgm',
     label: 'Eventos do SGM (formações / ações sociais)',
     points: 1,
     tone: 'comunidade',
   },
+  { id: 'encontro_familia', label: 'Encontro da família', points: 5, tone: 'comunidade' },
+  { id: 'terco', label: 'Rezar o terço', points: 3, tone: 'oracao' },
 ]
 
 export function getActivityById(id: string) {
