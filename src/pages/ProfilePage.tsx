@@ -144,6 +144,7 @@ export function ProfilePage() {
         <div className="avatar avatar--lg">
           {(displayName || '?').charAt(0).toUpperCase()}
         </div>
+        {profile?.display_name && <p className="profile-name">{profile.display_name}</p>}
         <p className="muted profile-email">{user?.email}</p>
       </div>
 

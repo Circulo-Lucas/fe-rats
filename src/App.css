@@ -287,6 +287,43 @@ textarea {
   height: 1.15rem;
 }
 
+/* —— Saudação do dia —— */
+.daily-greeting {
+  margin: 0 0 1.25rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.daily-greeting__hello {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.daily-greeting__verse {
+  margin: 0.45rem 0 0;
+}
+
+.daily-greeting__verse p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.12rem;
+  font-style: italic;
+  line-height: 1.35;
+}
+
+.daily-greeting__verse cite {
+  display: block;
+  margin-top: 0.3rem;
+  font-style: normal;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
 /* —— Feed —— */
 .feed-list {
   list-style: none;
@@ -736,6 +773,22 @@ textarea {
 .profile-hero {
   text-align: center;
   margin: 0.5rem 0 1.5rem;
+}
+
+.profile-hero .avatar {
+  margin: 0 auto;
+}
+
+.profile-name {
+  margin: 0.75rem 0 0;
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.profile-name + .profile-email {
+  margin-top: 0.2rem;
 }
 
 .profile-email {

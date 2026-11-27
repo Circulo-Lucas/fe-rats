@@ -7,6 +7,7 @@ import { formatRelativeTime } from '../lib/format'
 import { getActivityById } from '../constants/activities'
 import { PageHeader } from '../components/PageHeader'
 import { NoGroupPrompt } from '../components/NoGroupPrompt'
+import { DailyGreeting } from '../components/DailyGreeting'
 import { useCommunity } from '../context/CommunityContext'
 
 export function FeedPage() {
@@ -47,6 +48,8 @@ export function FeedPage() {
             : 'O que a comunidade registrou'
         }
       />
+
+      <DailyGreeting />
 
       {loading && <p className="status-line muted">Carregando…</p>}
       {error && <p className="status-line error">{error}</p>}
