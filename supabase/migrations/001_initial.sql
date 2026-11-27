@@ -1,4 +1,4 @@
--- FéRats: check-ins e pontuação da comunidade
+-- REDivinos: check-ins e pontuação da comunidade
 
 create table public.profiles (
   id uuid primary key references auth.users (id) on delete cascade,

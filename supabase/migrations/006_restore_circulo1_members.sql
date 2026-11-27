@@ -1,4 +1,4 @@
--- Restaura Comunidade Círculo Lucas (CIRCULO1) para quem já usava o app.
+-- Restaura o grupo padrão (id ...0010) para quem já usava o app.
 -- Rode no SQL Editor se a galera perdeu o grupo após o 005 ou backfill restrito.
 -- Idempotente: pode rodar mais de uma vez.
 
@@ -21,7 +21,7 @@ where c.id = '00000000-0000-4000-8000-000000000010'
   and p.created_at <= c.created_at
 on conflict do nothing;
 
--- 2) Quem fez pelo menos um check-in (usou o FéRats antes dos grupos ou no Círculo)
+-- 2) Quem fez pelo menos um check-in (usou o app antes dos grupos ou no grupo padrão)
 insert into public.community_members (community_id, user_id)
 select '00000000-0000-4000-8000-000000000010', p.id
 from public.profiles p
@@ -30,7 +30,7 @@ where exists (
 )
 on conflict do nothing;
 
--- 3) Check-ins que já eram do Círculo Lucas
+-- 3) Check-ins que já eram do grupo padrão
 insert into public.community_members (community_id, user_id)
 select distinct '00000000-0000-4000-8000-000000000010', ci.user_id
 from public.check_ins ci

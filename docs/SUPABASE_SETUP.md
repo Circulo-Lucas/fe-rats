@@ -1,4 +1,4 @@
-# Configurar Supabase para o FéRats
+# Configurar Supabase para o REDivinos
 
 Checklist na ordem. Projeto novo no [Supabase Dashboard](https://supabase.com/dashboard).
 
@@ -6,7 +6,7 @@ Checklist na ordem. Projeto novo no [Supabase Dashboard](https://supabase.com/da
 
 ## 1. Criar o projeto
 
-1. **New project** → escolha organização, nome (ex. `ferats`), senha do banco (guarde).
+1. **New project** → escolha organização, nome (ex. `redivinos`), senha do banco (guarde).
 2. Aguarde o projeto ficar **Active** (1–2 min).
 
 ---
@@ -18,10 +18,11 @@ Checklist na ordem. Projeto novo no [Supabase Dashboard](https://supabase.com/da
 3. Nova query: copie `supabase/migrations/002_check_in_photos_storage.sql`, **Run**.
 4. **Grupos:** rode **`003_communities.sql` inteiro** (obrigatório para o app), depois `004_photo_size_unlimited.sql`.
 5. **`005_circulo1_legacy_only.sql`** — só se você já tinha rodado uma versão **antiga** do `003` (que colocava todos os perfis no CIRCULO1). **Não rode o 005 antes do 003** — dá erro `community_members does not exist`.
-6. Se a galera do **Círculo Lucas** perdeu o grupo, rode **`006_restore_circulo1_members.sql`** (restaura quem já usava o app / era legado no CIRCULO1).
+6. Se a galera perdeu o grupo padrão, rode **`006_restore_circulo1_members.sql`** (restaura quem já usava o app).
 7. **Criar / entrar em grupo:** rode **`008_groups_create_join_fix.sql`** (policies + função `create_community` em JSON).
+8. Rode também `009`, `011` (pontuação) e `012` (renomeia o grupo padrão para **REDivinos**, código `REDIVINOS`).
 
-**Grupos:** quem já tinha conta quando o `003` rodou fica no **Comunidade Círculo Lucas** (código `CIRCULO1`). Contas **criadas depois** não entram automaticamente — em **Conta** podem **criar um grupo** ou **entrar com código**. Se o Círculo perdeu membros, rode o **`006_restore_circulo1_members.sql`**.
+**Grupos:** quem já tinha conta quando o `003` rodou fica no grupo padrão **REDivinos** (código `REDIVINOS`). Contas **criadas depois** não entram automaticamente — em **Conta** podem **criar um grupo** ou **entrar com código**.
 
 **Sucesso:** em **Table Editor** devem aparecer `profiles`, `activity_types`, `check_ins`, `communities`, `community_members`.  
 Em **Storage** deve existir o bucket `check-in-proofs`.
@@ -96,7 +97,7 @@ No plano gratuito o Supabase envia **poucos e-mails por hora** (cadastros repeti
 
 **O que fazer:**
 
-1. Desligue **Confirm email** (passo 3 acima) — principal ajuste para o FéRats.
+1. Desligue **Confirm email** (passo 3 acima) — principal ajuste para o REDivinos.
 2. **Authentication** → **Rate Limits** — revise limites se o painel mostrar essa seção.
 3. Espere ~1 h e tente de novo, ou use **Entrar** se o cadastro já tiver sido criado antes.
 4. Em **Authentication** → **Users**, confira se o usuário já existe e, se quiser, confirme manualmente o e-mail.

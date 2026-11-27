@@ -10,14 +10,14 @@ function greetingFor(hour: number) {
 export function DailyGreeting() {
   const { profile } = useAuth()
   const now = new Date()
-  const firstName = profile?.display_name?.trim().split(/\s+/)[0]
+  const displayName = profile?.display_name?.trim()
   const verse = getVerseOfTheDay(now)
 
   return (
     <section className="daily-greeting" aria-label="Saudação e versículo do dia">
       <p className="daily-greeting__hello">
         {greetingFor(now.getHours())}
-        {firstName ? `, ${firstName}` : ''}!
+        {displayName ? `, ${displayName}` : ''}!
       </p>
       <blockquote className="daily-greeting__verse">
         <p>“{verse.text}”</p>

@@ -31,8 +31,8 @@ alter table public.check_ins
 insert into public.communities (id, name, invite_code)
 values (
   '00000000-0000-4000-8000-000000000010',
-  'Comunidade Círculo Lucas',
-  'CIRCULO1'
+  'REDivinos',
+  'REDIVINOS'
 )
 on conflict (id) do nothing;
 

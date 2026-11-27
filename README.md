@@ -1,4 +1,4 @@
-# FéRats
+# REDivinos
 
 App para a comunidade registrar presença nas atividades da igreja, somar pontos e acompanhar a participação do grupo.
 
@@ -11,19 +11,19 @@ App para a comunidade registrar presença nas atividades da igreja, somar pontos
 
 | Atividade | Pontos |
 |-----------|--------|
-| Participação no Círculo | 5 |
-| Missa dominical | 2 |
-| Adoração / Santíssimo | 1 |
-| Missa em meio de semana | 1 |
-| Sacramentos | 1 |
-| Eventos do SGM | 1 |
+| Círculo | 20 |
+| Missa dominical | 20 |
+| Confissão (2x ao ano: antes da Quaresma / antes de servir no EJC) | 15 |
+| Adoração / visita ao Santíssimo | 10 |
+| Terço com REDivinos (2x por mês, cada encontro) | 10 |
+| Missa em meio de semana | 5 |
+| Eventos (formações / ações) | 5 |
+| Encontro de família | 5 |
 
 ## Começar
 
 1. Crie um projeto em [Supabase](https://supabase.com).
-2. No **SQL Editor**, rode na ordem:
-   - `supabase/migrations/001_initial.sql`
-   - `supabase/migrations/002_check_in_photos_storage.sql`
+2. No **SQL Editor**, rode as migrations de `supabase/migrations/` na ordem numérica (detalhes em `docs/SUPABASE_SETUP.md`).
 3. Em **Authentication → Providers**, habilite **Email**.
 4. Copie `.env.example` para `.env` com URL e chave `anon`.
 5. `npm install` e `npm run dev`.
@@ -32,8 +32,7 @@ App para a comunidade registrar presença nas atividades da igreja, somar pontos
 
 ## Comprovante em foto
 
-- Cada check-in exige **uma foto** tirada na hora.
-- O app lê a **data EXIF** da imagem e só aceita se for o **mesmo dia** do registro (fuso do dispositivo; lógica em `src/lib/photoProof.ts`).
+- Cada check-in exige **uma foto** de comprovação.
 - A foto fica no bucket `check-in-proofs` por **7 dias** (`photo_expires_at`); depois some do feed e do Storage, mas **os pontos continuam**.
 
 ### Limpar fotos expiradas (1× por dia)
@@ -45,11 +44,7 @@ App para a comunidade registrar presença nas atividades da igreja, somar pontos
 ## Rotas
 
 - `/entrar` — login e cadastro
-- `/` — registros da comunidade
+- `/` — saudação do dia e registros do grupo
 - `/registrar` — nova atividade + comprovante
 - `/ranking` — pontuação acumulada
-- `/perfil` — conta e critérios de pontos
-
-## Limitações da verificação EXIF
-
-A checagem é feita no navegador e confia nos metadados da foto. Prints, imagens reenviadas ou editadas podem não ter EXIF ou ter horário incorreto. Para auditoria mais rígida, seria necessário validação no servidor ou moderação manual.
+- `/perfil` — conta, grupos e critérios de pontos

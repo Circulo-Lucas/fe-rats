@@ -25,7 +25,7 @@
   --highlight: var(--gold);
   --danger: #ffe08a;
   --ok: #ffffff;
-  --brand-rats: var(--gold);
+  --brand-accent: var(--gold);
   --avatar-bg: #ffffff;
   --avatar-fg: var(--red);
   --btn-bg: #ffffff;
@@ -78,7 +78,7 @@ body {
   --highlight: var(--red);
   --danger: #b5121d;
   --ok: #15803d;
-  --brand-rats: var(--red);
+  --brand-accent: var(--red);
   --avatar-bg: var(--red);
   --avatar-fg: #ffffff;
   --btn-bg: var(--red);
@@ -155,9 +155,9 @@ textarea {
   line-height: 1.1;
 }
 
-.brand-wordmark__rats {
+.brand-wordmark__accent {
   font-weight: 700;
-  color: var(--brand-rats);
+  color: var(--brand-accent);
 }
 
 .brand-wordmark--sm {
